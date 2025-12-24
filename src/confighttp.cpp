@@ -1171,6 +1171,40 @@ namespace confighttp {
     platf::restart();
   }
 
+  /**
+   * @brief Hide the remote cursor.
+   * @param response The HTTP response object.
+   * @param request The HTTP request object.
+   */
+  void hideCursor(resp_https_t response, req_https_t request) {
+    print_req(request);
+
+    display_cursor = false;
+
+    nlohmann::json output_tree;
+    output_tree["status"] = true;
+    output_tree["message"] = "Cursor hidden";
+
+    send_response(response, output_tree);
+  }
+
+  /**
+   * @brief Show the remote cursor.
+   * @param response The HTTP response object.
+   * @param request The HTTP request object.
+   */
+  void showCursor(resp_https_t response, req_https_t request) {
+    print_req(request);
+
+    display_cursor = true;
+
+    nlohmann::json output_tree;
+    output_tree["status"] = true;
+    output_tree["message"] = "Cursor shown";
+
+    send_response(response, output_tree);
+  }
+
   void start() {
     auto shutdown_event = mail::man->event<bool>(mail::shutdown);
 
@@ -1207,6 +1241,8 @@ namespace confighttp {
     server.resource["^/api/config$"]["POST"] = saveConfig;
     server.resource["^/api/configLocale$"]["GET"] = getLocale;
     server.resource["^/api/restart$"]["POST"] = restart;
+    server.resource["^/api/hide-cursor$"]["POST"] = hideCursor;
+    server.resource["^/api/show-cursor$"]["POST"] = showCursor;
     server.resource["^/api/reset-display-device-persistence$"]["POST"] = resetDisplayDevicePersistence;
     server.resource["^/api/password$"]["POST"] = savePassword;
     server.resource["^/api/apps/([0-9]+)$"]["DELETE"] = deleteApp;
@@ -1219,7 +1255,7 @@ namespace confighttp {
     server.resource["^/images/logo-sunshine-45.png$"]["GET"] = getSunshineLogoImage;
     server.resource["^/assets\\/.+$"]["GET"] = getNodeModules;
     server.config.reuse_address = true;
-    server.config.address = net::get_bind_address(address_family);
+    server.config.address = net::af_to_any_address_string(address_family);
     server.config.port = port_https;
 
     auto accept_and_run = [&](auto *server) {
